@@ -14,7 +14,7 @@ and, you want to make comparisons of the following sort:
 
 .. ipython:: python
 
-   170 > height > 160 and 25 < age < 30
+   170 >= height >= 160 and 25 <= age <= 30
 
 
 With the following IPython magic:

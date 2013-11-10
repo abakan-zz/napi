@@ -2,9 +2,8 @@
 
 def neval(expression, globals=None, locals=None, **kwargs):
     """Evaluate *expression* using *globals* and *locals* dictionaries as
-    *global* and *local* namespace.  If *globals* is not given, :func:`globals`
-    will be used to get *global* namespace. *expression* will be transformed
-    using napi abstract syntax tree :class:`.NapiTransformer`."""
+    *global* and *local* namespace.  *expression* is transformed using
+    :class:`.NapiTransformer`."""
 
     try:
         import __builtin__ as builtins
@@ -35,10 +34,9 @@ def neval(expression, globals=None, locals=None, **kwargs):
 
 
 def nexec(statement, globals=None, locals=None, **kwargs):
-    """Evaluate *statement* using *globals* and *locals* dictionaries as
-    *global* and *local* namespace.  If *globals* is not given, :func:`globals`
-    will be used to get *global* namespace.  *statement* will be transformed
-    using napi abstract syntax tree :class:`.NapiTransformer`."""
+    """Execute *statement* using *globals* and *locals* dictionaries as
+    *global* and *local* namespace.  *statement* is transformed using
+    :class:`.NapiTransformer`."""
 
     try:
         import __builtin__ as builtins
