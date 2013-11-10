@@ -44,12 +44,17 @@ class String(str):
 nsource = String(open(os.path.join(imp.find_module('napi')[1],
                                   'functions.py')).read())
 
+
+def register_magic():
+
+    from .magics import NapiMagics
+    ip = get_ipython()
+    if ip is not None:
+        ip.register_magics(NapiMagics(ip))
+
 try:
     from IPython import get_ipython
 except ImportError:
     pass
 else:
-    from .magics import NapiMagics
-    ip = get_ipython()
-    if ip is not None:
-        ip.register_magics(NapiMagics(ip))
+    register_magic()
