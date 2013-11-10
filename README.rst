@@ -5,18 +5,22 @@ napi
 ====
 
 napi is an abstract syntax tree transformer to simplify NumPy_ array
-operations.  In IPython, for example, you can use the following magic::
+operations.  In IPython, for example, you can use the following magic:
 
-    In [1]: import napi
+.. code-block:: ipython
 
-    In [2]: %napi
-    napi ast transformer is turned ON
+   In [1]: import napi
 
-to enable evaluation of the following code::
+   In [2]: %napi
+   napi ast transformer is turned ON
 
-    In [3] from numpy import *
+to enable evaluation of the following code:
 
-    In [4] 0 <= arange(10) < 10 and True
+.. code-block:: ipython
+
+   In [3] from numpy import *
+
+   In [4] 0 <= arange(10) < 10 and True
 
 .. _NumPy: http://www.numpy.org/
 
