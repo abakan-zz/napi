@@ -18,11 +18,18 @@ And, you want to make comparisons of the following sort:
 
 With the following IPython magic:
 
-.. ipython::
+.. ipython:: python
 
-   In [1]: import napi
+   import napi
 
-   In [1]: %napi
+.. ipython:: python
+   :suppress:
+
+   napi.register_magic()
+
+.. ipython:: python
+
+   %napi
 
 
 You can make it work:
