@@ -3,7 +3,7 @@ import operator
 
 from ast import fix_missing_locations as fml
 from ast import copy_location, parse
-from _ast import Name, Expression, Num, Str, Repr, keyword
+from _ast import Name, Expression, Num, Str, keyword
 from _ast import And, Or, Not, Eq, NotEq, Lt, LtE, Gt, GtE
 from _ast import BoolOp, Compare, Subscript, Load, Index, Call, List
 from _ast import Dict
@@ -18,12 +18,6 @@ def ast_name(id, ctx=Load()):
     name = Name(id, ctx)
     name._fields = ('id', 'ctx')
     return name
-
-def ast_repr(value):
-
-    repr = Repr(value)
-    repr._fields = ('value',)
-    return repr
 
 COMPARE = {
     Eq: operator.eq,
@@ -286,7 +280,6 @@ class Transformer(ast.NodeTransformer):
             result = self._or(node)
         self._debug('|_', result, incr=1)
         self._decr()
-        #return copy_location(ast_repr(result), node)
         return self._return(result, node)
 
     def _and(self, node):
