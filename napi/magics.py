@@ -22,7 +22,7 @@ class NapiMagics(Magics):
     def napi(self, line):
         """Control the automatic transformation of abstract syntax trees.
 
-        Call as '%napi on', '%napi 1', '%napi off' or '%napi 0'. If called
+        Call as `%napi on`, `%napi 1`, `%napi off` or `%napi 0`. If called
         without argument it works as a toggle.
 
         """
