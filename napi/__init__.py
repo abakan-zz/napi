@@ -31,6 +31,8 @@ from . import transformers
 
 __all__ = ['nsource', 'nexec', 'neval'] + transformers.__all__
 
+__version__ = '0.1'
+
 class String(str):
 
     def __call__(self, neval='neval', nexec='nexec'):
