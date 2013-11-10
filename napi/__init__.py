@@ -24,7 +24,7 @@ ambiguous. Use a.any() or a.all()
 import os
 import imp
 
-from .functions import neval, nexec
+from .functions import *
 
 from .transformers import *
 from . import transformers
