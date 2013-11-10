@@ -11,7 +11,7 @@ from _ast import Dict
 import numpy
 from numpy import ndarray
 
-__all__ = ['Transformer', 'LazyTransformer',
+__all__ = ['NapiTransformer', 'LazyTransformer',
            'napi_compare', 'napi_and', 'napi_or']
 
 def ast_name(id, ctx=Load()):
@@ -175,7 +175,7 @@ class LazyTransformer(ast.NodeTransformer):
         return node
 
 
-class Transformer(ast.NodeTransformer):
+class NapiTransformer(ast.NodeTransformer):
 
     """An :mod:`ast` transformer that replaces chained comparison and logical
     operation expressions with function calls."""
@@ -186,7 +186,7 @@ class Transformer(ast.NodeTransformer):
         self._ti = 0
         self._kwargs = kwargs
         self._indent = 0
-        if False and not kwargs.get('debug', False):
+        if not kwargs.get('debug', False):
             self._debug = lambda *args, **kwargs: None
         self._sc = kwargs.get('sc', 10000)
         #self._which = None
@@ -212,8 +212,9 @@ class Transformer(ast.NodeTransformer):
             return getattr(node, ATTRMAP[node.__class__])
         except KeyError:
             self._debug('_get', node)
-            expr = Expression(fml(Transformer(globals=self._g, locals=self._l,
-                                              **self._kwargs).visit(node)))
+            expr = Expression(fml(NapiTransformer(globals=self._g,
+                                                  locals=self._l,
+                                                  **self._kwargs).visit(node)))
             try:
                 return eval(compile(expr, '<string>', 'eval'), self._g, self._l)
             except Exception as err:

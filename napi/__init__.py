@@ -8,18 +8,12 @@
 :func:`.neval`
 --------------
 
-:func:`.neval` handles logical operations and comparisons of arrays delicately:
+:func:`.neval` handles chained comparisons and logical operations of arrays
+delicately:
 
 >>> a = arange(8)
->>> v('a < 3 or a > 5')
-array([ True,  True,  True, False, False, False,  True,  True], dtype=bool)
-
-The same expression will not work with :func:`eval`:
-
->>> eval('a < 3 or a > 5')
-ValueError: The truth value of an array with more than one element is \
-ambiguous. Use a.any() or a.all()
-"""
+>>> v('2 <= a < 3 or a > 5')
+array([ True,  True,  True, False, False, False,  True,  True], dtype=bool)"""
 
 import os
 import imp

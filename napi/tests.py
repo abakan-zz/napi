@@ -2,8 +2,8 @@ from nose.tools import raises
 import numpy as np
 
 from napi import neval
-from napi.transformers import Transformer, LazyTransformer
-TRANSFORMERS = [Transformer]#, LazyTransformer]
+from napi.transformers import NapiTransformer, LazyTransformer
+TRANSFORMERS = [NapiTransformer]#, LazyTransformer]
 
 randbools = lambda *n: np.random.randn(*n) < 0
 

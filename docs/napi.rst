@@ -1,6 +1,8 @@
 napi package
 ============
 
+.. automodule:: napi.__init__
+
 :mod:`functions` module
 -----------------------
 
