@@ -34,8 +34,8 @@ extensions = [
     'sphinx.ext.pngmath',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'matplotlib.sphinxext.ipython_console_highlighting',
-    'matplotlib.sphinxext.ipython_directive']
+    'ipython.sphinxext.ipython_console_highlighting',
+    'ipython.sphinxext.ipython_directive']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
