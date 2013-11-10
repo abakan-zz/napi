@@ -1,18 +1,10 @@
 napi Package
 ============
 
-:mod:`napi` Package
--------------------
-
-.. automodule:: napi.__init__
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`functions` Module
 -----------------------
 
-.. automodule:: napi.eval
+.. automodule:: napi.functions
     :members:
     :undoc-members:
     :show-inheritance:
@@ -20,7 +12,7 @@ napi Package
 :mod:`magics` Module
 -----------------------
 
-.. automodule:: napi.eval
+.. automodule:: napi.magics
     :members:
     :undoc-members:
     :show-inheritance:
@@ -28,7 +20,7 @@ napi Package
 :mod:`transformers` Module
 --------------------------
 
-.. automodule:: napi.transformer
+.. automodule:: napi.transformers
     :members:
     :undoc-members:
     :show-inheritance:
