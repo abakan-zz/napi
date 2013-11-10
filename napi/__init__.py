@@ -1,0 +1,53 @@
+"""A New API for simplifying logical operations and comparisons of arrays.
+
+>>> from napi import *
+>>> exec(nsource)
+>>> neval
+<function __main__.neval>
+
+:func:`.neval`
+--------------
+
+:func:`.neval` handles logical operations and comparisons of arrays delicately:
+
+>>> a = arange(8)
+>>> v('a < 3 or a > 5')
+array([ True,  True,  True, False, False, False,  True,  True], dtype=bool)
+
+The same expression will not work with :func:`eval`:
+
+>>> eval('a < 3 or a > 5')
+ValueError: The truth value of an array with more than one element is \
+ambiguous. Use a.any() or a.all()
+"""
+
+import os
+import imp
+
+from .functions import neval, nexec
+
+from .transformers import *
+from . import transformers
+
+__all__ = ['nsource', 'nexec', 'neval'] + transformers.__all__
+
+class String(str):
+
+    def __call__(self, neval='neval', nexec='nexec'):
+
+        neval = ' {}('.format(neval)
+        nexec = ' {}('.format(nexec)
+        return self.replace(' neval(', neval).replace('nexec', nexec)
+
+nsource = String(open(os.path.join(imp.find_module('napi')[1],
+                                  'functions.py')).read())
+
+try:
+    from IPython import get_ipython
+except ImportError:
+    pass
+else:
+    from .magics import NapiMagics
+    ip = get_ipython()
+    if ip is not None:
+        ip.register_magics(NapiMagics(ip))
