@@ -20,7 +20,8 @@ to enable evaluation of the following code:
 
    In [3] from numpy import *
 
-   In [4] 0 <= arange(10) < 10 and True
+   In [4] 0 <= arange(6) < 6 and True
+   Out[4]: array([ True,  True,  True,  True,  True,  True], dtype=bool)
 
 .. _NumPy: http://www.numpy.org/
 
