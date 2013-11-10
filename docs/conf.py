@@ -133,6 +133,7 @@ html_theme = 'default'
 
 html_favicon = '_static/favicon.ico'
 html_static_path = ['_static']
+add_javascript = ['_static/copybutton.js']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.

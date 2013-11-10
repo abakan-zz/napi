@@ -18,10 +18,11 @@ And, you want to make comparisons of the following sort:
 
 With the following IPython magic:
 
-.. ipython:: python
+.. ipython::
 
-   import napi
-   %napi
+   In [1]: import napi
+
+   In [1]: %napi
 
 
 You can make it work:
