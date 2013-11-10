@@ -6,7 +6,7 @@ from ast import copy_location, parse
 from _ast import Name, Expression, Num, Str, Repr, keyword
 from _ast import And, Or, Not, Eq, NotEq, Lt, LtE, Gt, GtE
 from _ast import BoolOp, Compare, Subscript, Load, Index, Call, List
-from _ast import List, Dict, Set, ListComp, DictComp, SetComp, Tuple
+from _ast import Dict
 
 import numpy
 from numpy import ndarray
@@ -46,7 +46,6 @@ ATTRMAP = {
 }
 
 EVALSET = {List: '',
-    Set: '',
     Dict: ''
 }
 

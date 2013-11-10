@@ -48,7 +48,7 @@ def nexec(statement, globals=None, locals=None, **kwargs):
     try:
         node = parse(statement, '<string>', 'exec')
     except ImportError:#KeyError:
-        exec statement
+        exec(statement)
     else:
         if globals is None:
             globals = builtins.globals()
