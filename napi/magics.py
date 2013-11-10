@@ -1,5 +1,3 @@
-from ast import fix_missing_locations as fml
-
 from IPython.core.magic import Magics, magics_class, line_magic
 from IPython import get_ipython
 
@@ -38,22 +36,23 @@ class NapiMagics(Magics):
                 try:
                     self._state = self._states[arg.lower()]
                 except KeyError:
+                    pass
                     try:
                         self._kwargs[arg] = not self._kwargs[arg]
                     except KeyError:
-                        print('Incorrect napi argument: {}. Use on/1, off/0, '
-                              ' '
-                              'transformer, or one of {} to configure')
-                        return
+                        pass
                 else:
                     msg = 'napi ast transformer is turned {}'.format(
                         ('OFF', 'ON')[self._state])
-            elif len(args) == 2:
+            elif False and len(args) == 2:
                 if arg in self._kwargs:
                     pass
                 else:
                     print('Incorrect napi argument: ' + repr(arg))
                     return
+            print('Incorrect napi argument: {}. Use on/1, off/0, '
+                  'transformer, or one of {} to configure')
+            return
 
 
         else:
