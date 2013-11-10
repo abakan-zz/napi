@@ -35,10 +35,10 @@ Installation
 Source Code
 -----------
 
-* Issue tracker: https://github.com/abakan/napi
+* https://github.com/abakan/napi
 
 
 License
 -------
 
-napi is available under MIT License. See LICENSE.txt for more details.
+*napi* is available under MIT License. See LICENSE.txt for more details.
