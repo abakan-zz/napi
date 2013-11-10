@@ -16,7 +16,7 @@ class NapiMagics(Magics):
     _state = False
     _kwargs = {}
     _states = {'off': 0, '0': 0, 'on': 1, '1': 1}
-    _prefix = '_napi_'
+    _prefix = '_'
 
     @line_magic
     def napi(self, line):
@@ -79,11 +79,11 @@ class NapiMagics(Magics):
         self._remove()
         ip = get_ipython()
 
-        from napi.transformers import compare, logical_and, logical_or
+        from napi.transformers import napi_compare, napi_and, napi_or
         prefix = self._prefix
-        ip.user_global_ns[prefix + 'compare'] = compare
-        ip.user_global_ns[prefix + 'logical_or'] = logical_or
-        ip.user_global_ns[prefix + 'logical_and'] = logical_and
+        ip.user_global_ns[prefix + 'napi_compare'] = napi_compare
+        ip.user_global_ns[prefix + 'napi_or'] = napi_or
+        ip.user_global_ns[prefix + 'napi_and'] = napi_and
 
         ip.ast_transformers.append(LazyTransformer(prefix=prefix,
                                                    **self._kwargs))

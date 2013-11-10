@@ -11,7 +11,8 @@ from _ast import Dict
 import numpy
 from numpy import ndarray
 
-__all__ = ['Transformer', 'LazyTransformer']
+__all__ = ['Transformer', 'LazyTransformer',
+           'napi_compare', 'napi_and', 'napi_or']
 
 def ast_name(id, ctx=Load()):
 
@@ -46,19 +47,21 @@ EVALSET = {List: '',
 RESERVED = {'True': True, 'False': False, 'None': None}
 
 
-def compare(left, ops, comparators, **kwargs):
+def napi_compare(left, ops, comparators, **kwargs):
+    """Make pairwise comparisons of comparators."""
 
     values = []
     for op, right in zip(ops, comparators):
         values.append(COMPARE[op](left, right))
         left = right
-    result = logical_and(values, **kwargs)
+    result = napi_and(values, **kwargs)
     if isinstance(result, ndarray):
         return result
     else:
         return bool(result)
 
-def logical_and(values, **kwargs):
+def napi_and(values, **kwargs):
+    """Use :obj:`~numpy.logical_and` for :class:`~numpy.ndarray` instances."""
 
     arrays = []
     result = None
@@ -94,7 +97,8 @@ def logical_and(values, **kwargs):
     else:
         return value
 
-def logical_or(values, **kwargs):
+def napi_or(values, **kwargs):
+    """Use :obj:`~numpy.logical_or` for :class:`~numpy.ndarray` instances."""
 
     arrays = []
     result = None
@@ -127,7 +131,12 @@ def logical_or(values, **kwargs):
     else:
         return value
 
+
 class LazyTransformer(ast.NodeTransformer):
+
+    """An :mod:`ast` transformer that replaces chained comparison and logical
+    operation expressions with function calls."""
+
 
     def __init__(self, **kwargs):
 
@@ -136,34 +145,40 @@ class LazyTransformer(ast.NodeTransformer):
                         for key, value in kwargs.items()]
 
     def visit_Compare(self, node):
+        """Replace chained comparisons with calls to :func:`.napi_compare`."""
 
         if len(node.ops) > 1:
             #print ast.dump(node, True, True)
-            node = Call(func=Name(id=self._prefix + 'compare', ctx=Load()),
-                        args=[node.left,
-                              List(elts=[Str(op.__class__.__name__) for op in node.ops], ctx=Load()),
-                              List(elts=node.comparators, ctx=Load())],
-                        keywords=self._kwargs, starargs=None, kwargs=None)
+            func = Name(id=self._prefix + 'napi_compare', ctx=Load())
+            args = [node.left,
+                    List(elts=[Str(op.__class__.__name__)
+                               for op in node.ops], ctx=Load()),
+                    List(elts=node.comparators, ctx=Load())]
+            node = Call(func=func, args=args, keywords=self._kwargs)
             fml(node)
             #print ast.dump(node, True, True)
         self.generic_visit(node)
         return node
 
     def visit_BoolOp(self, node):
+        """Replace logical operations with calls to :func:`.napi_and` or
+        :func:`.napi_or`."""
 
         if isinstance(node.op, And):
-            call = self._prefix + 'logical_and'
+            func = Name(id=self._prefix + 'napi_and', ctx=Load())
         else:
-            call = self._prefix + 'logical_or'
-        node = Call(func=Name(id=call, ctx=Load()),
-                    args=[List(elts=node.values, ctx=Load())],
-                    keywords=self._kwargs, starargs=None, kwargs=None)
+            func = Name(id=self._prefix + 'napi_or', ctx=Load())
+        args = [List(elts=node.values, ctx=Load())]
+        node = Call(func=func, args=args, keywords=self._kwargs)
         fml(node)
         self.generic_visit(node)
         return node
 
 
 class Transformer(ast.NodeTransformer):
+
+    """An :mod:`ast` transformer that replaces chained comparison and logical
+    operation expressions with function calls."""
 
     def __init__(self, **kwargs):
 
