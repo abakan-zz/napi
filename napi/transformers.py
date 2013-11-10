@@ -52,7 +52,7 @@ def compare(left, ops, comparators, **kwargs):
     for op, right in zip(ops, comparators):
         values.append(COMPARE[op](left, right))
         left = right
-    result = logical_and(values)
+    result = logical_and(values, **kwargs)
     if isinstance(result, ndarray):
         return result
     else:
@@ -129,11 +129,11 @@ def logical_or(values, **kwargs):
 
 class LazyTransformer(ast.NodeTransformer):
 
-    def __init__(self, prefix, **kwargs):
+    def __init__(self, **kwargs):
 
-        self._prefix = prefix
+        self._prefix = kwargs.pop('prefix', '')
         self._kwargs = [keyword(identifier=key, expr=value)
-                        for key, value in kwargs]
+                        for key, value in kwargs.items()]
 
     def visit_Compare(self, node):
 
@@ -162,11 +162,12 @@ class LazyTransformer(ast.NodeTransformer):
         self.generic_visit(node)
         return node
 
+
 class Transformer(ast.NodeTransformer):
 
-    def __init__(self, globals={}, locals={}, **kwargs):
+    def __init__(self, **kwargs):
 
-        self._g, self._l = globals, locals
+        self._g, self._l = kwargs.pop('globals', {}), kwargs.pop('locals', {})
         self._ti = 0
         self._kwargs = kwargs
         self._indent = 0
@@ -196,8 +197,8 @@ class Transformer(ast.NodeTransformer):
             return getattr(node, ATTRMAP[node.__class__])
         except KeyError:
             self._debug('_get', node)
-            expr = Expression(fml(Transformer(self._g, self._l, **self._kwargs)
-                              .visit(node)))
+            expr = Expression(fml(Transformer(globals=self._g, locals=self._l,
+                                              **self._kwargs).visit(node)))
             try:
                 return eval(compile(expr, '<string>', 'eval'), self._g, self._l)
             except Exception as err:

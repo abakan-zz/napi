@@ -14,7 +14,10 @@ def neval(expression, globals=None, locals=None, **kwargs):
     from ast import parse
     from ast import fix_missing_locations as fml
 
-    from napi.transformers import Transformer
+    try:
+        transformer = kwargs['transformer']
+    except KeyError:
+        from napi.transformers import Transformer as transformer
 
     #try:
     node = parse(expression, '<string>', 'eval')
@@ -25,7 +28,7 @@ def neval(expression, globals=None, locals=None, **kwargs):
         globals = builtins.globals()
     if locals is None:
         locals = {}
-    trans = Transformer(globals, locals, **kwargs)
+    trans = transformer(globals=globals, locals=locals, **kwargs)
     trans.visit(node)
     code = compile(fml(node), '<string>', 'eval')
     return builtins.eval(code, globals, locals)
@@ -54,7 +57,7 @@ def nexec(statement, globals=None, locals=None, **kwargs):
             globals = builtins.globals()
         if locals is None:
             locals = {}
-        trans = Transformer(globals, locals, **kwargs)
+        trans = Transformer(globals=globals, locals=locals, **kwargs)
         trans.visit(node)
         code = compile(fml(node), '<string>', 'exec')
         return builtins.eval(code, globals, locals)

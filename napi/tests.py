@@ -2,27 +2,29 @@ from nose.tools import raises
 import numpy as np
 
 from napi import neval
-
+from napi.transformers import Transformer, LazyTransformer
+TRANSFORMERS = [Transformer]#, LazyTransformer]
 
 randbools = lambda *n: np.random.randn(*n) < 0
 
 
-def check_logicops_of_python_types(source, debug=False):
+def check_logicops_of_python_types(source, debug=False, trans=None):
 
-    result, expect = neval(source, debug=debug), eval(source)
+    result, expect = neval(source, debug=debug, transformer=trans), eval(source)
     assert result == expect, '{} != {}'.format(result, expect)
 
 
 def test_logicops_of_python_types(debug=False):
 
-    for src in [
-        '1 and True', 'True and 1', '[] and True', 'True and []', '1 and [1]',
-        '0 or True', 'False or 1', '[] or True', 'True or []', 'False or [1]',
-        'True and [1] and 1 and {1: 1}',
-        'True and [1] and 1 and {1: 1} and {}',
-        'True and [1] and 0 or {} and {1: 1}',]:
+    for t in TRANSFORMERS:
+        for src in [
+            '1 and True', 'True and 1', '[] and True', 'True and []', '1 and [1]',
+            '0 or True', 'False or 1', '[] or True', 'True or []', 'False or [1]',
+            'True and [1] and 1 and {1: 1}',
+            'True and [1] and 1 and {1: 1} and {}',
+            'True and [1] and 0 or {} and {1: 1}',]:
 
-        yield check_logicops_of_python_types, src, debug
+            yield check_logicops_of_python_types, src, debug, t
 
 
 def check_logicops_of_arrays(source, expect, ns, debug=False, sc=10000):
