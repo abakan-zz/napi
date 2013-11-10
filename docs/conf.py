@@ -11,15 +11,17 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
-
-import mock
+import imp, sys, os
 
 try:
-    import matplotlib
+    imp.find_module('matplotlib')
 except ImportError:
+    import mock
     for mod_name in ['matplotlib', 'matplotlib.pyplot']:
         sys.modules[mod_name] = mock.Mock()
+
+_ = os.path.split(os.path.split(__file__)[0])[0]
+sys.path.append(os.path.join(_, 'napi'))
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
