@@ -1,27 +1,23 @@
-napi Package
+napi package
 ============
 
-:mod:`functions` Module
+:mod:`functions` module
 -----------------------
 
 .. automodule:: napi.functions
     :members:
-    :undoc-members:
     :show-inheritance:
 
-:mod:`magics` Module
+:mod:`magics` module
 -----------------------
 
 .. automodule:: napi.magics
     :members:
-    :undoc-members:
     :show-inheritance:
 
-:mod:`transformers` Module
+:mod:`transformers` module
 --------------------------
 
 .. automodule:: napi.transformers
     :members:
-    :undoc-members:
     :show-inheritance:
-
