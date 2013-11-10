@@ -5,11 +5,8 @@
 >>> neval
 <function __main__.neval>
 
-:func:`.neval`
---------------
-
-:func:`.neval` handles chained comparisons and logical operations of arrays
-delicately:
+:func:`.neval` function that behaves similar to :func:`eval` handles
+chained comparisons and logical operations of arrays delicately:
 
 >>> a = arange(8)
 >>> v('2 <= a < 3 or a > 5')
