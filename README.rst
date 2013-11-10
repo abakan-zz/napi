@@ -14,7 +14,7 @@ operations.  In IPython, for example, you can use the following magic:
    In [2]: %napi
    napi ast transformer is turned ON
 
-to enable evaluation of the following code:
+to enable evaluation of the following expression:
 
 .. code-block:: ipython
 
@@ -28,6 +28,8 @@ to enable evaluation of the following code:
 Installation
 -------------
 
+*napi* works with Python 2.7, 3.2 and later.
+
 ::
 
   $ pip install -U napi
@@ -36,7 +38,7 @@ Installation
 Source Code
 -----------
 
-* https://github.com/abakan/napi
+https://github.com/abakan/napi
 
 
 License
