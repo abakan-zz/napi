@@ -1,0 +1,8 @@
+include LICENSE.txt
+include README.rst
+include setup.py
+include napi\__init__.py
+include napi\functions.py
+include napi\magics.py
+include napi\tests.py
+include napi\transformers.py

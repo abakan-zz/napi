@@ -63,7 +63,7 @@ Alternatively, you can:
    from napi import *
    exec(nsource)
 
-This will give define :func:`.neval` in your current namespace:
+This will define :func:`.neval` in your current namespace:
 
 .. ipython:: python
 
