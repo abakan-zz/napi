@@ -1,5 +1,5 @@
-napi - A New API for simplifying array operations
-=================================================
+napi - for simplifying array operations
+=======================================
 
 Let's say you have a few data arrays of the same size:
 
