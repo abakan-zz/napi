@@ -22,7 +22,7 @@ from . import transformers
 
 __all__ = ['nsource', 'nexec', 'neval'] + transformers.__all__
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 class String(str):
 
