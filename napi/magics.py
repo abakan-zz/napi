@@ -14,8 +14,9 @@ class NapiMagics(Magics):
     """
 
     _state = False
-    _kwargs = {}
+    _config = {'squeeze': False}
     _states = {'off': 0, '0': 0, 'on': 1, '1': 1}
+    _validate = {'squeeze': lambda arg: arg in _states}
     _prefix = '_'
 
     @line_magic
@@ -27,37 +28,38 @@ class NapiMagics(Magics):
 
         """
 
-        args = line.strip().split()
+        args = line.strip().lower().split()
 
 
         if args:
             arg = args[0]
-            if len(args) == 1:
-                try:
-                    self._state = self._states[arg.lower()]
-                except KeyError:
-                    pass
-                    try:
-                        self._kwargs[arg] = not self._kwargs[arg]
-                    except KeyError:
-                        pass
-                else:
-                    msg = 'napi ast transformer is turned {}'.format(
-                        ('OFF', 'ON')[self._state])
-            elif False and len(args) == 2:
-                if arg in self._kwargs:
-                    pass
-                else:
-                    print('Incorrect napi argument: ' + repr(arg))
-                    return
-            print('Incorrect napi argument: {}. Use on/1, off/0, '
-                  'transformer, or one of {} to configure')
-            return
+            if len(args) == 1 and arg in self._states:
+                self._state = self._states[arg]
+                msg = 'napi transformer is turned {}'.format(
+                    ('OFF', 'ON')[self._state])
+            elif arg in self._config:
+                if arg == 'squeeze':
+                    if len(args) == 1:
+                        self._config[arg] = not self._config[arg]
+                    elif len(args) == 2:
+                        try:
+                            self._config['squeeze'] = self._states[args[1]]
+                        except KeyError:
+                            print('Invalid napi argument: {}.'.format(arg))
+                            return
+                    else:
+                        print('Incorrect number of napi arguments.')
+                        return
 
-
+                    state = ('OFF', 'ON')[self._config['squeeze']]
+                    msg = 'napi array squeezing is turned {}'.format(state)
+                    self.napi('on')
+            else:
+                print('Invalid napi argument: {}.'.format(arg))
+                return
         else:
             self._state = not self._state
-            msg = 'napi ast transformer is turned {}'.format(
+            msg = 'napi transformer is turned {}'.format(
                 ('OFF', 'ON')[self._state])
 
         if self._state:
@@ -86,7 +88,7 @@ class NapiMagics(Magics):
         ip.user_global_ns[prefix + 'napi_and'] = napi_and
 
         ip.ast_transformers.append(LazyTransformer(prefix=prefix,
-                                                   **self._kwargs))
+                                                   **self._config))
 
     def _remove(self):
 

@@ -81,6 +81,7 @@ which behaves like :func:`eval`:
    :hidden:
 
    napi
+   changes
 
 
 Indices and tables

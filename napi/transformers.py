@@ -8,6 +8,8 @@ from _ast import And, Or, Not, Eq, NotEq, Lt, LtE, Gt, GtE
 from _ast import BoolOp, Compare, Subscript, Load, Index, Call, List
 from _ast import Dict
 
+from numbers import Number
+
 import numpy
 from numpy import ndarray
 
@@ -19,6 +21,15 @@ def ast_name(id, ctx=Load()):
     name = Name(id, ctx)
     name._fields = ('id', 'ctx')
     return name
+
+def ast_smart(val):
+
+    if isinstance(val, Number):
+        return Num(n=val)
+    elif isinstance(val, basestring):
+        return Str(s=val)
+    else:
+        return ast_name(str(val))
 
 COMPARE = {
     Eq: operator.eq,
@@ -60,6 +71,7 @@ def napi_compare(left, ops, comparators, **kwargs):
     else:
         return bool(result)
 
+
 def napi_and(values, **kwargs):
     """Use :obj:`~numpy.logical_and` for :class:`~numpy.ndarray` instances."""
 
@@ -74,13 +86,16 @@ def napi_and(values, **kwargs):
         elif not value:
             result = value
 
-    if len(shapes) > 1:
+    if len(shapes) > 1 and kwargs.get('squeeze', False):
         shapes.clear()
         for i, a in enumerate(arrays):
             a = arrays[i] = a.squeeze()
             shapes.add(a.shape)
         if len(shapes) > 1:
             raise ValueError('array shape mismatch, even after squeezing')
+
+    if len(shapes) > 1:
+        raise ValueError('array shape mismatch')
 
     shape = shapes.pop() if shapes else None
 
@@ -97,6 +112,7 @@ def napi_and(values, **kwargs):
     else:
         return value
 
+
 def napi_or(values, **kwargs):
     """Use :obj:`~numpy.logical_or` for :class:`~numpy.ndarray` instances."""
 
@@ -111,13 +127,16 @@ def napi_or(values, **kwargs):
         elif value:
             result = value
 
-    if len(shapes) > 1:
+    if len(shapes) > 1 and kwargs.get('squeeze', False):
         shapes.clear()
         for i, a in enumerate(arrays):
             a = arrays[i] = a.squeeze()
             shapes.add(a.shape)
         if len(shapes) > 1:
             raise ValueError('array shape mismatch, even after squeezing')
+
+    if len(shapes) > 1:
+        raise ValueError('array shape mismatch')
 
     shape = shapes.pop() if shapes else None
 
@@ -141,7 +160,7 @@ class LazyTransformer(ast.NodeTransformer):
     def __init__(self, **kwargs):
 
         self._prefix = kwargs.pop('prefix', '')
-        self._kwargs = [keyword(identifier=key, expr=value)
+        self._kwargs = [keyword(arg=key, value=ast_smart(value))
                         for key, value in kwargs.items()]
 
     def visit_Compare(self, node):
