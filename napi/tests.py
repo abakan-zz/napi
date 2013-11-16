@@ -3,9 +3,21 @@ import numpy as np
 
 from napi import neval
 from napi.transformers import NapiTransformer, LazyTransformer
+from napi.transformers import short_circuit_and
 TRANSFORMERS = [NapiTransformer]#, LazyTransformer]
 
 randbools = lambda *n: np.random.randn(*n) < 0
+
+def eval_short_circuit_and(arrays, shape):
+
+    assert np.all(short_circuit_and(list(arrays), shape) == np.all(arrays, 0))
+
+def test_short_circuit_and():
+
+    for shape in [(10,), (10, 3), (1, 10, 1, 4)]:
+        yield eval_short_circuit_and, [randbools(*shape), randbools(*shape),
+            randbools(*shape)], shape
+
 
 def check_napi_magic_configuration(func, line):
 
