@@ -28,7 +28,7 @@ napi ASTs has the following options:
 
    short-circuiting
       when number of elements in an array is larger then a user given value,
-      the smallest number of comparisons are perform
+      the smallest number of comparisons are performed:
 
 
       .. ipython::
@@ -42,7 +42,9 @@ napi ASTs has the following options:
          In [5]: %time z and z and z
 
       In this extreme example where all elements of the first array is
-      false, the operation is 10 times faster.
+      false, the operation is more than 10 times faster.
+
+      Short-circuiting for ``or`` logical operation is not yet implemented.
 
 """
 
