@@ -7,6 +7,22 @@ TRANSFORMERS = [NapiTransformer]#, LazyTransformer]
 
 randbools = lambda *n: np.random.randn(*n) < 0
 
+def check_napi_magic_configuration(func, line):
+
+    assert func(line) is None
+
+def test_napi_magic_configuration():
+
+    from napi.magics import NapiMagics
+    magic = NapiMagics(None)
+    magic._remove = magic._append = lambda: None
+    func = magic.napi
+    for line in ['', '', 'on', 'off', '1', '0', 'sq', 'sq', 'sc', 'sc',
+                 'sq on', 'sq off', 'sq 1', 'sq 0',
+                 'sc 0', 'sc 10000']:
+
+        yield check_napi_magic_configuration, func, line
+
 
 def check_logicops_of_python_types(source, debug=False, trans=None):
 

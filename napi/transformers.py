@@ -1,3 +1,51 @@
+"""This module defines abstract syntax three transformers (ASTs) that handles
+array operations delicately.
+
+
+.. ipython:: python
+   :suppress:
+
+   from numpy import *
+   import napi
+   napi.register_magic()
+   %napi
+
+napi ASTs has the following options:
+
+.. glossary::
+
+   squeezing
+      when shapes of arrays in a logical operation do not match, squeezing
+      removes single-dimensional entries from the shape and tries to
+      compare the arrays again:
+
+      .. ipython::
+
+         In [1]: %napi squeeze on
+
+         In [2]: ones(4, bool) or zeros((1,4,1), bool)
+
+
+   short-circuiting
+      when number of elements in an array is larger then a user given value,
+      the smallest number of comparisons are perform
+
+
+      .. ipython::
+
+         In [2]: z = zeros(10000000, bool)
+
+         In [3]: %time z and z and z
+
+         In [4]: %napi shortcircuit
+
+         In [5]: %time z and z and z
+
+      In this extreme example where all elements of the first array is
+      false, the operation is 10 times faster.
+
+"""
+
 import ast
 import operator
 
@@ -63,7 +111,8 @@ def napi_compare(left, ops, comparators, **kwargs):
 
     values = []
     for op, right in zip(ops, comparators):
-        values.append(COMPARE[op](left, right))
+        value = COMPARE[op](left, right)
+        values.append(value)
         left = right
     result = napi_and(values, **kwargs)
     if isinstance(result, ndarray):
@@ -86,7 +135,7 @@ def napi_and(values, **kwargs):
         elif not value:
             result = value
 
-    if len(shapes) > 1 and kwargs.get('squeeze', False):
+    if len(shapes) > 1 and kwargs.get('sq', kwargs.get('squeeze', False)):
         shapes.clear()
         for i, a in enumerate(arrays):
             a = arrays[i] = a.squeeze()
@@ -105,7 +154,25 @@ def napi_and(values, **kwargs):
         else:
             return result
     elif arrays:
-        if len(arrays) == 2:
+        sc = kwargs.get('sc', kwargs.get('shortcircuit', 0))
+        if sc and numpy.prod(shape) >= sc:
+            a = arrays.pop(0)
+            nz = (a if a.dtype == bool else
+                  a.astype(bool)).nonzero()
+            if len(nz) > 1:
+                while arrays:
+                    a = arrays.pop()[nz]
+                    which = a if a.dtype == bool else a.astype(bool)
+                    nz = tuple(i[which] for i in nz)
+            else:
+                nz = nz[0]
+                while arrays:
+                    a = arrays.pop()[nz]
+                    nz = nz[a if a.dtype == bool else a.astype(bool)]
+            result = numpy.zeros(shape, bool)
+            result[nz] = True
+            return result
+        elif len(arrays) == 2:
             return numpy.logical_and(*arrays)
         else:
             return numpy.all(arrays, 0)
@@ -127,7 +194,7 @@ def napi_or(values, **kwargs):
         elif value:
             result = value
 
-    if len(shapes) > 1 and kwargs.get('squeeze', False):
+    if len(shapes) > 1 and kwargs.get('squeeze', kwargs.get('sq', False)):
         shapes.clear()
         for i, a in enumerate(arrays):
             a = arrays[i] = a.squeeze()

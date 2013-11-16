@@ -5,6 +5,7 @@ from .transformers import LazyTransformer
 
 __all__ = ['NapiMagics']
 
+STATES = {'off': 0, '0': 0, 'on': 1, '1': 1}
 
 @magics_class
 class NapiMagics(Magics):
@@ -14,9 +15,18 @@ class NapiMagics(Magics):
     """
 
     _state = False
-    _config = {'squeeze': False}
-    _states = {'off': 0, '0': 0, 'on': 1, '1': 1}
-    _validate = {'squeeze': lambda arg: arg in _states}
+    _kwargs = {'sq': False, 'sc': 0}
+    _option = {'sq': ('sq', 'squeeze',
+                      lambda arg: not arg,
+                      lambda arg: ('OFF', 'ON')[arg],
+                      lambda arg: arg in STATES,
+                      lambda arg: bool(STATES[arg])),
+               'sc': ('sc', 'shortcircuit',
+                       lambda arg: 0 if arg > 0 else 10000,
+                       lambda arg: arg,
+                       lambda arg: arg.isdigit(), int)}
+    _option['squeeze'] = _option['sq']
+    _option['shortcircuit'] = _option['sc']
     _prefix = '_'
 
     @line_magic
@@ -26,55 +36,57 @@ class NapiMagics(Magics):
         Call as ``%napi on``, ``%napi 1``, ``%napi off`` or ``%napi 0``.
         If called without an argument it works as a toggle.
 
-        """
+        **Configuration**:
+
+          * ``%napi sc`` or ``%napi shortcircuit`` toggles
+            :term:`short-circuiting`.
+
+          * ``%napi sq`` or ``%napi squeeze`` toggles array :term:`squeezing`.
+            ``on`` or ``1`` and ``off`` or ``0`` arguments are also recognized.
+            """
 
         args = line.strip().lower().split()
 
-
         if args:
-            arg = args[0]
-            if len(args) == 1 and arg in self._states:
-                self._state = self._states[arg]
-                msg = 'napi transformer is turned {}'.format(
-                    ('OFF', 'ON')[self._state])
-            elif arg in self._config:
-                if arg == 'squeeze':
-                    if len(args) == 1:
-                        self._config[arg] = not self._config[arg]
-                    elif len(args) == 2:
-                        try:
-                            self._config['squeeze'] = self._states[args[1]]
-                        except KeyError:
-                            print('Invalid napi argument: {}.'.format(arg))
-                            return
-                    else:
-                        print('Incorrect number of napi arguments.')
-                        return
-
-                    state = ('OFF', 'ON')[self._config['squeeze']]
-                    msg = 'napi array squeezing is turned {}'.format(state)
-                    self.napi('on')
-            else:
-                print('Invalid napi argument: {}.'.format(arg))
-                return
+            self._config(*args)
         else:
             self._state = not self._state
-            msg = 'napi transformer is turned {}'.format(
-                ('OFF', 'ON')[self._state])
+            msg = 'napi transformer is {}'.format(('OFF', 'ON')[self._state])
+            print(msg)
 
         if self._state:
             self._append()
         else:
             self._remove()
 
-        print(msg)
 
-        # alternatively, but message is not printed at default log level
-        if False:
-            import logging
-            ip_logger = logging.getLogger('TerminalIPythonApp')
-            ip_logger.info(msg)
+    def _config(self, *args):
 
+        arg = args[0]
+        if len(args) == 1 and arg in STATES:
+            self._state = STATES[arg]
+            print('napi transformer is {}'.format(('OFF', 'ON')[self._state]))
+            return
+        elif arg in self._option:
+            (keyword, verbose, toggle,
+                display, validate, convert) = self._option[arg]
+            if len(args) == 1:
+                self._kwargs[keyword] = value = toggle(self._kwargs[keyword])
+                print('napi configured: {} = {}'
+                      .format(verbose, display(value)))
+                return
+            elif len(args) == 2:
+                value = args[1]
+                if validate(value):
+                    self._kwargs[keyword] = value = convert(value)
+                    print('napi configured: {} = {}'
+                          .format(verbose, display(value)))
+                else:
+                    print('Invalid napi {} argument: {}'
+                          .format(verbose, value))
+                return
+        print('Invalid napi argument: {}'.format(arg))
+        return
 
     def _append(self):
 
@@ -88,7 +100,7 @@ class NapiMagics(Magics):
         ip.user_global_ns[prefix + 'napi_and'] = napi_and
 
         ip.ast_transformers.append(LazyTransformer(prefix=prefix,
-                                                   **self._config))
+                                                   **self._kwargs))
 
     def _remove(self):
 
