@@ -158,28 +158,32 @@ def napi_and(values, **kwargs):
     elif arrays:
         sc = kwargs.get('sc', kwargs.get('shortcircuit', 0))
         if sc and numpy.prod(shape) >= sc:
-            a = arrays.pop(0)
-            nz = (a if a.dtype == bool else
-                  a.astype(bool)).nonzero()
-            if len(nz) > 1:
-                while arrays:
-                    a = arrays.pop()[nz]
-                    which = a if a.dtype == bool else a.astype(bool)
-                    nz = tuple(i[which] for i in nz)
-            else:
-                nz = nz[0]
-                while arrays:
-                    a = arrays.pop()[nz]
-                    nz = nz[a if a.dtype == bool else a.astype(bool)]
-            result = numpy.zeros(shape, bool)
-            result[nz] = True
-            return result
+            return short_circuit_and(arrays, shape)
         elif len(arrays) == 2:
             return numpy.logical_and(*arrays)
         else:
             return numpy.all(arrays, 0)
     else:
         return value
+
+
+def short_circuit_and(arrays, shape):
+
+    a = arrays.pop(0)
+    nz = (a if a.dtype == bool else a.astype(bool)).nonzero()
+    if len(nz) > 1:
+        while arrays:
+            a = arrays.pop()[nz]
+            which = a if a.dtype == bool else a.astype(bool)
+            nz = tuple(i[which] for i in nz)
+    else:
+        nz = nz[0]
+        while arrays:
+            a = arrays.pop()[nz]
+            nz = nz[a if a.dtype == bool else a.astype(bool)]
+    result = numpy.zeros(shape, bool)
+    result[nz] = True
+    return result
 
 
 def napi_or(values, **kwargs):
@@ -215,9 +219,33 @@ def napi_or(values, **kwargs):
         else:
             return result
     elif arrays:
-        return numpy.any(arrays, 0)
+        sc = kwargs.get('sc', kwargs.get('shortcircuit', 0))
+        if sc and numpy.prod(shape) >= sc:
+            return short_circuit_or(arrays, shape)
+        elif len(arrays) == 2:
+            return numpy.logical_or(*arrays)
+        else:
+            return numpy.any(arrays, 0)
     else:
         return value
+
+
+def short_circuit_or(arrays, shape):
+
+    a = arrays.pop(0)
+    nz = (a if a.dtype == bool else a.astype(bool)).nonzero()
+    if len(nz) > 1:
+        while arrays:
+            a = arrays.pop()[nz]
+            which = a if a.dtype == bool else a.astype(bool)
+            nz = tuple(i[which] for i in nz)
+    else:
+        nz = nz[0]
+        while arrays:
+            a = arrays.pop()[nz]
+            nz = nz[a if a.dtype == bool else a.astype(bool)]
+    result = numpy.zeros(shape, bool)
+    result[nz] = True
 
 
 class LazyTransformer(ast.NodeTransformer):
@@ -419,26 +447,10 @@ class NapiTransformer(ast.NodeTransformer):
                 return result
         elif arrays:
             self._debug('|~ Arrays:', arrays, incr=1)
-            if len(arrays) == 2:
-                return numpy.logical_and(*arrays)
             if self._sc and numpy.prod(shape) >= self._sc:
-                a = arrays.pop(0)
-                nz = (a if a.dtype == bool else
-                      a.astype(bool)).nonzero()
-                if len(nz) > 1:
-                    while arrays:
-                        a = arrays.pop()[nz]
-                        which = a if a.dtype == bool else a.astype(bool)
-                        nz = tuple(i[which] for i in nz)
-                else:
-                    nz = nz[0]
-                    while arrays:
-                        a = arrays.pop()[nz]
-                        nz = nz[a if a.dtype == bool else a.astype(bool)]
-                        self._debug('|~ nonzero:', len(nz), incr=2)
-                result = numpy.zeros(shape, bool)
-                result[nz] = True
-                return result
+                return short_circuit_and(arrays, shape)
+            elif len(arrays) == 2:
+                return numpy.logical_and(*arrays)
             else:
                 return numpy.all(arrays, 0)
         else:
