@@ -88,6 +88,16 @@ pygments_style = 'sphinx'
 modindex_common_prefix = ['napi.']
 
 
+rst_epilog = u"""
+.. _PyPI: http://pypi.python.org/pypi/napi
+.. _GitHub: http://github.com/prody/napi
+
+.. _IPython: http://ipython.org
+.. _Python: http://www.python.org
+.. _NumPy: http://www.numpy.org
+.. _Scipy: http://www.scipy.org
+.. _pip: http://www.pip-installer.org"""
+
 # -- Options for HTML output ---------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
