@@ -26,8 +26,8 @@ work:
 Installation
 ------------
 
-*napi* is a lightweight Python package. You can install it
-using pip_::
+*napi* is a lightweight and pure Python package. 
+You can install it using pip_::
 
   $ pip install napi
 
