@@ -261,8 +261,8 @@ def short_circuit_or(arrays, shape):
     nz = (a == z).nonzero()
     if len(nz) > 1:
         while arrays:
-            a = arrays.pop()[nz]
-            which = a if a.dtype == bool else a.astype(bool)
+            a = arrays.pop()
+            which = a[nz] == ZERO(a.dtype)
             nz = tuple(i[which] for i in nz)
     else:
         nz = nz[0]
@@ -319,8 +319,8 @@ class LazyTransformer(ast.NodeTransformer):
 
 class NapiTransformer(ast.NodeTransformer):
 
-    """An :mod:`ast` transformer that replaces chained comparison and logical
-    operation expressions with function calls."""
+    """An :mod:`ast` transformer that evaluates chained comparison and logical
+    operation expressions of arrays while transforming the AST."""
 
     def __init__(self, **kwargs):
 
@@ -514,7 +514,12 @@ class NapiTransformer(ast.NodeTransformer):
                 return result
         elif arrays:
             self._debug('|~ Arrays:', arrays, incr=1)
-            return numpy.any(arrays, 0)
+            if self._sc and numpy.prod(shape) >= self._sc:
+                return short_circuit_or(arrays, shape)
+            elif len(arrays) == 2:
+                return numpy.logical_or(*arrays)
+            else:
+                return numpy.any(arrays, 0)
         else:
             return value
 
