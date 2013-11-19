@@ -68,7 +68,7 @@ napi ASTs has the following options:
          such performance loss will usually be acceptable.
 
 
-.. truth: http://docs.python.org/library/stdtypes.html#truth-value-testing
+.. _truth: http://docs.python.org/library/stdtypes.html#truth-value-testing
 
 """
 
@@ -163,10 +163,11 @@ def napi_and(values, **kwargs):
     If *values* contains a non-array object with truth_ value **False**, the
     outcome will be an array of **False**\s with suitable shape without arrays
     being evaluated. Non-array objects with truth value **True** are omitted.
+
     If array shapes do not match (after squeezing when enabled by user),
     :exc:`ValueError` is raised.
 
-    This function uses :obj:`~numpy.logical_and` or :obj:`~numpy.all`."""
+    This function uses :obj:`numpy.logical_and` or :obj:`numpy.all`."""
 
     arrays = []
     result = None
@@ -238,7 +239,7 @@ def napi_or(values, **kwargs):
     If array shapes do not match (after squeezing when enabled by user),
     :exc:`ValueError` is raised.
 
-    This function uses :obj:`~numpy.logical_or` or :obj:`~numpy.any`."""
+    This function uses :obj:`numpy.logical_or` or :obj:`numpy.any`."""
 
     arrays = []
     result = None
