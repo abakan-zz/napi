@@ -84,7 +84,8 @@ from numbers import Number
 import numpy
 from numpy import ndarray
 
-ZERO = {}.setdefault
+_setdefault = {}.setdefault
+ZERO = lambda dtype: _setdefault(dtype, numpy.zeros(1, dtype)[0])
 
 __all__ = ['NapiTransformer', 'LazyTransformer',
            'napi_compare', 'napi_and', 'napi_or']
@@ -256,7 +257,7 @@ def napi_or(values, **kwargs):
 def short_circuit_or(arrays, shape):
 
     a = arrays.pop(0)
-    z = ZERO(a.dtype, numpy.zeros(1, a.dtype)[0])
+    z = ZERO(a.dtype)
     nz = (a == z).nonzero()
     if len(nz) > 1:
         while arrays:
@@ -267,7 +268,7 @@ def short_circuit_or(arrays, shape):
         nz = nz[0]
         while arrays:
             a = arrays.pop()[nz]
-            nz = nz[a == ZERO(a.dtype, numpy.zeros(1, a.dtype)[0])]
+            nz = nz[a == ZERO(a.dtype)]
     result = numpy.ones(shape, bool)
     result[nz] = False
     return result
