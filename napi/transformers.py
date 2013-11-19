@@ -67,6 +67,9 @@ napi ASTs has the following options:
          perform worse, but since the cost of operation is negligible
          such performance loss will usually be acceptable.
 
+
+.. truth: http://docs.python.org/library/stdtypes.html#truth-value-testing
+
 """
 
 import ast
@@ -90,13 +93,19 @@ ZERO = lambda dtype: _setdefault(dtype, numpy.zeros(1, dtype)[0])
 __all__ = ['NapiTransformer', 'LazyTransformer',
            'napi_compare', 'napi_and', 'napi_or']
 
+
 def ast_name(id, ctx=Load()):
 
     name = Name(id, ctx)
     name._fields = ('id', 'ctx')
     return name
 
+
 def ast_smart(val):
+    """Return a suitable subclass of :class:`ast.AST` for storing numbers
+    or strings. For other type of objects, return a node class that will
+    indicate that the variable is contained in one of global or local
+    namespaces."""
 
     if isinstance(val, Number):
         return Num(n=val)
@@ -104,6 +113,7 @@ def ast_smart(val):
         return Str(s=val)
     else:
         return ast_name(str(val))
+
 
 COMPARE = {
     Eq: operator.eq,
@@ -148,7 +158,15 @@ def napi_compare(left, ops, comparators, **kwargs):
 
 
 def napi_and(values, **kwargs):
-    """Use :obj:`~numpy.logical_and` for :class:`~numpy.ndarray` instances."""
+    """Perform element-wise logical *and* operation on arrays.
+
+    If *values* contains a non-array object with truth_ value **False**, the
+    outcome will be an array of **False**\s with suitable shape without arrays
+    being evaluated. Non-array objects with truth value **True** are omitted.
+    If array shapes do not match (after squeezing when enabled by user),
+    :exc:`ValueError` is raised.
+
+    This function uses :obj:`~numpy.logical_and` or :obj:`~numpy.all`."""
 
     arrays = []
     result = None
@@ -211,7 +229,16 @@ def short_circuit_and(arrays, shape):
 
 
 def napi_or(values, **kwargs):
-    """Use :obj:`~numpy.logical_or` for :class:`~numpy.ndarray` instances."""
+    """Perform element-wise logical *or* operation on arrays.
+
+    If *values* contains a non-array object with truth_ value **True**, the
+    outcome will be an array of **True**\s with suitable shape without arrays
+    being evaluated. Non-array objects with truth value **False** are omitted.
+
+    If array shapes do not match (after squeezing when enabled by user),
+    :exc:`ValueError` is raised.
+
+    This function uses :obj:`~numpy.logical_or` or :obj:`~numpy.any`."""
 
     arrays = []
     result = None
@@ -290,7 +317,6 @@ class LazyTransformer(ast.NodeTransformer):
         """Replace chained comparisons with calls to :func:`.napi_compare`."""
 
         if len(node.ops) > 1:
-            #print ast.dump(node, True, True)
             func = Name(id=self._prefix + 'napi_compare', ctx=Load())
             args = [node.left,
                     List(elts=[Str(op.__class__.__name__)
@@ -298,7 +324,6 @@ class LazyTransformer(ast.NodeTransformer):
                     List(elts=node.comparators, ctx=Load())]
             node = Call(func=func, args=args, keywords=self._kwargs)
             fml(node)
-            #print ast.dump(node, True, True)
         self.generic_visit(node)
         return node
 
