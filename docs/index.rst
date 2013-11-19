@@ -1,9 +1,9 @@
 napi - for simplifying array operations
 =======================================
 
-*napi* is an abstract syntax tree transformer that let's
-evaluation of chained comparisons and logical operations
-of NumPy_ arrays to work:
+*napi* is an abstract syntax tree transformer that makes
+chained comparisons and logical operations of NumPy_ arrays
+work:
 
 .. ipython:: python
    :suppress:
@@ -27,7 +27,7 @@ Installation
 ------------
 
 *napi* is a lightweight Python package. You can install it
-using *pip*::
+using pip_::
 
   $ pip install napi
 
@@ -39,7 +39,7 @@ Contents
 
    tutorial
    reference/index
-
+   whatsnew
 
 Indices
 -------
