@@ -5,7 +5,8 @@ from .transformers import LazyTransformer
 
 __all__ = ['NapiMagics']
 
-STATES = {'off': 0, '0': 0, 'on': 1, '1': 1}
+STATES = {'off': False, '0': False, 'false': False,
+          'on': True, '1': True, 'true': True}
 
 @magics_class
 class NapiMagics(Magics):
@@ -18,7 +19,7 @@ class NapiMagics(Magics):
     _kwargs = {'sq': False, 'sc': 0}
     _option = {'sq': ('sq', 'squeeze',
                       lambda arg: not arg,
-                      lambda arg: ('OFF', 'ON')[arg],
+                      lambda arg: arg,
                       lambda arg: arg in STATES,
                       lambda arg: bool(STATES[arg])),
                'sc': ('sc', 'shortcircuit',

@@ -21,7 +21,7 @@ napi ASTs has the following options:
 
       .. ipython::
 
-         In [1]: %napi squeeze on
+         In [1]: %napi squeeze
 
          In [2]: ones(4, bool) or zeros((1,4,1), bool)
 
