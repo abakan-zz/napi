@@ -41,9 +41,6 @@ Contents
    reference/index
    whatsnew
 
-Indices
--------
-
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
