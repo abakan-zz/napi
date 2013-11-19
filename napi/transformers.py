@@ -27,8 +27,9 @@ napi ASTs has the following options:
 
 
    short-circuiting
-      when number of elements in an array is larger then a user given value,
-      the smallest number of comparisons are performed:
+      *napi* ASTs perform short-circuit evaluation in the same way Python
+      boolean operators does. This is performed when the number of elements
+      in arrays is larger or equal to the user set threshold:
 
 
       .. ipython::
@@ -37,14 +38,34 @@ napi ASTs has the following options:
 
          In [3]: %time z and z and z
 
-         In [4]: %napi shortcircuit
+         In [4]: %napi shortcircuit 1000
 
          In [5]: %time z and z and z
 
       In this extreme example where all elements of the first array is
       false, the operation is more than 10 times faster.
 
-      Short-circuiting for ``or`` logical operation is not yet implemented.
+      .. ipython::
+
+         In [1]: randbools = lambda *n: random.randn(*n) < 0
+
+         In [1]: a, b, c, d, e, f, g = (randbools(10000) for i in range(7))
+
+         In [1]: %time with_sc = a or b or c or d or e or f or g
+
+         In [1]: %napi shortcircuit
+
+         In [1]: %time wout_sc = a or b or c or d or e or f or g
+
+         In [1]: all(with_sc == wout_sc)
+
+      In this example too, short-circuiting performs considerably faster.
+
+      .. note::
+
+         For really small arrays (~100 elements), short-circuiting may
+         perform worse, but since the cost of operation is negligible
+         such performance loss will usually be acceptable.
 
 """
 
@@ -62,6 +83,8 @@ from numbers import Number
 
 import numpy
 from numpy import ndarray
+
+ZERO = {}.setdefault
 
 __all__ = ['NapiTransformer', 'LazyTransformer',
            'napi_compare', 'napi_and', 'napi_or']
@@ -233,7 +256,8 @@ def napi_or(values, **kwargs):
 def short_circuit_or(arrays, shape):
 
     a = arrays.pop(0)
-    nz = (a if a.dtype == bool else a.astype(bool)).nonzero()
+    z = ZERO(a.dtype, numpy.zeros(1, a.dtype)[0])
+    nz = (a == z).nonzero()
     if len(nz) > 1:
         while arrays:
             a = arrays.pop()[nz]
@@ -243,9 +267,10 @@ def short_circuit_or(arrays, shape):
         nz = nz[0]
         while arrays:
             a = arrays.pop()[nz]
-            nz = nz[a if a.dtype == bool else a.astype(bool)]
-    result = numpy.zeros(shape, bool)
-    result[nz] = True
+            nz = nz[a == ZERO(a.dtype, numpy.zeros(1, a.dtype)[0])]
+    result = numpy.ones(shape, bool)
+    result[nz] = False
+    return result
 
 
 class LazyTransformer(ast.NodeTransformer):

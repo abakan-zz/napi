@@ -8,20 +8,29 @@ TRANSFORMERS = [NapiTransformer]#, LazyTransformer]
 
 randbools = lambda *n: np.random.randn(*n) < 0
 
-def eval_short_circuit_and(arrays, shape):
+
+def short_circuit_and_(arrays, shape):
 
     assert np.all(short_circuit_and(list(arrays), shape) == np.all(arrays, 0))
 
+
+def short_circuit_or_(arrays, shape):
+
+    assert np.all(short_circuit_and(list(arrays), shape) == np.all(arrays, 0))
+
+
 def test_short_circuit_and():
 
-    for shape in [(10,), (10, 3), (1, 10, 1, 4)]:
-        yield eval_short_circuit_and, [randbools(*shape), randbools(*shape),
-            randbools(*shape)], shape
+    for func in [short_circuit_and_, short_circuit_or_]:
+        for shape in [(10,), (10, 3), (1, 10, 1, 4)]:
+            yield func, [randbools(*shape), randbools(*shape),
+                         randbools(*shape)], shape
 
 
 def check_napi_magic_configuration(func, line):
 
     assert func(line) is None
+
 
 def test_napi_magic_configuration():
 
