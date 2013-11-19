@@ -9,7 +9,7 @@
 chained comparisons and logical operations of arrays delicately:
 
 >>> a = arange(8)
->>> v('2 <= a < 3 or a > 5')
+>>> neval('2 <= a < 3 or a > 5')
 array([ True,  True,  True, False, False, False,  True,  True], dtype=bool)"""
 
 import os
