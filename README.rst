@@ -35,13 +35,13 @@ Installation
   $ pip install -U napi
 
 
-Source Code
------------
+Docs & Source
+-------------
 
-https://github.com/abakan/napi
-
+ * Docs: http://napi.rtfd.org
+ * Source: https://github.com/abakan/napi
 
 License
 -------
 
-*napi* is available under MIT License. See LICENSE.txt for more details.
+*napi* is available under MIT License.
