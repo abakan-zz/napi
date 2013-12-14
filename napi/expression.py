@@ -6,12 +6,13 @@ from ast import copy_location as copy, fix_missing_locations as fix
 from ast import iter_fields
 
 import numpy
-from numpy import ndarray
+from numpy import ndarray, logical_and, logical_not, logical_or
+from numpy import ones, zeros, prod, all as np_all, any as np_any
 
 _setdefault = {}.setdefault
-ZERO = lambda dtype: _setdefault(dtype, numpy.zeros(1, dtype)[0])
+ZERO = lambda dtype: _setdefault(dtype, zeros(1, dtype)[0])
 NONE = Name(id='None', ctx=Load())
-ROOT = (Name(id='False', ctx=Load()), Name(id='True', ctx=Load()))
+ROOT = (Num(n=0), Num(n=1))
 OPMAP = {
     'Add': operator.add,
     'Sub': operator.sub,
@@ -51,7 +52,7 @@ def short_circuit_or(arrays, shape):
         while arrays:
             a = arrays.pop()[nz]
             nz = nz[a == ZERO(a.dtype)]
-    result = numpy.ones(shape, bool)
+    result = ones(shape, bool)
     result[nz] = False
     return result
 
@@ -69,11 +70,14 @@ def short_circuit_and(arrays, shape):
         while arrays:
             a = arrays.pop()[nz]
             nz = nz[a if a.dtype == bool else a.astype(bool)]
-    result = numpy.zeros(shape, bool)
+    result = zeros(shape, bool)
     result[nz] = True
     return result
 
 class NExpression(object):
+    """
+    Expression evaluator.
+    """
 
     def __init__(self, **kwargs):
 
@@ -119,16 +123,16 @@ class NExpression(object):
 
         if result is not None:
             if shape:
-                result = numpy.zeros(shape, bool)
+                result = zeros(shape, bool)
             else:
                 result = result
         elif arrays:
-            if self._sc and numpy.prod(shape) >= self._sc:
+            if self._sc and prod(shape) >= self._sc:
                 result = short_circuit_and(arrays, shape)
             elif len(arrays) == 2:
-                result = numpy.logical_and(*arrays)
+                result = logical_and(*arrays)
             else:
-                result = numpy.all(arrays, 0)
+                result = np_all(arrays, 0)
         else:
             result = value
 
@@ -166,16 +170,16 @@ class NExpression(object):
 
         if result is not None:
             if shape:
-                result = numpy.ones(shape, bool)
+                result = ones(shape, bool)
             else:
                 result = result
         elif arrays:
-            if self._sc and numpy.prod(shape) >= self._sc:
+            if self._sc and prod(shape) >= self._sc:
                 result = short_circuit_or(arrays, shape)
             elif len(arrays) == 2:
-                result = numpy.logical_or(*arrays)
+                result = logical_or(*arrays)
             else:
-                result = numpy.any(arrays, 0)
+                result = np_any(arrays, 0)
         else:
             result = value
         if root:
@@ -207,11 +211,23 @@ class NExpression(object):
 
         print('@> UnaryOp(op={}, operand={}, uid={})'
               .format(op, operand, uid))
-        return OPMAP[op](operand)
+        if op == 'Not' and isinstance(operand, ndarray):
+            return logical_not(operand)
+        else:
+            return OPMAP[op](operand)
 
 
 class NewTransformer(ast.NodeTransformer):
+    """
+    Transforms logical, binary, unary, and comparison operations that are
+    within a logical operation or a chained comparison into function calls
+    to an instance of :class:`NExpression`.
 
+    >>> import ast
+    >>> transform = NewTransformer(e='_E')
+    >>> t = transform(ast.parse('a or b'))
+
+    """
 
     def __init__(self, **kwargs):
 
@@ -221,6 +237,8 @@ class NewTransformer(ast.NodeTransformer):
         self._id = id(self)
 
     def __getitem__(self, attr):
+        """Return :class:`Attribute` instance for :class:`NExpression` methods.
+        """
 
         return self._attrs.setdefault(attr,
             fix(Attribute(value=Name(id=self._e, ctx=Load()),
@@ -228,20 +246,22 @@ class NewTransformer(ast.NodeTransformer):
 
     @property
     def _uid(self):
+        """Unique identifier used for identification of binary, unary,
+        comparison, and logical operations that are within a logical
+        operation or a chained comparison."""
 
         self._count += 1
         return Str(s='{}_{}'.format(self._id, self._count))
 
     def visit(self, node, uid=None):
-        """Visit a node."""
+        """Visit *node* by passing *uid* to the visitor method."""
 
         method = 'visit_' + node.__class__.__name__
-        if hasattr(self, method):
-            return getattr(self, method)(node, uid)
-        else:
-            return self.generic_visit(node)
+        visitor = getattr(self, method, self.generic_visit)
+        return visitor(node, uid)
 
     def generic_visit(self, node, uid=None):
+
         for field, old_value in iter_fields(node):
             old_value = getattr(node, field, None)
             if isinstance(old_value, list):
@@ -279,7 +299,12 @@ class NewTransformer(ast.NodeTransformer):
         args = [List(elts=node.values, ctx=Load()), uid, root]
         return fix(copy(Call(func=func, args=args, keywords=[]), node))
 
-    def visit_Compare(self, node, uid=NONE):
+    def visit_Compare(self, node, uid=None):
+        """Transform a chained comparison *node* or any comparison node
+        that is within a logical operation (*uid* is not ``None``)."""
+
+        if uid is None and len(node.comparators) > 1:
+            uid = self._uid
 
         self.generic_visit(node, uid)
         if uid is None:
@@ -288,11 +313,14 @@ class NewTransformer(ast.NodeTransformer):
             print('~ Compare')
             func = self['Compare']
             args = [node.left,
-                    List(elts=[Str(op.__class__.__name__) for op in node.ops], ctx=Load()),
+                    List(elts=[Str(op.__class__.__name__) for op in node.ops],
+                         ctx=Load()),
                     List(elts=node.comparators, ctx=Load()), uid]
             return copy(Call(func=func, args=args, keywords=[]), node)
 
-    def visit_BinOp(self, node, uid=NONE):
+    def visit_BinOp(self, node, uid=None):
+        """Transform binary operation *node* that it is within a logical
+        operation or a chained comparison."""
 
         self.generic_visit(node, uid)
         if uid is None:
@@ -304,13 +332,18 @@ class NewTransformer(ast.NodeTransformer):
                     node.right, uid]
             return copy(Call(func=func, args=args, keywords=[]), node)
 
-    def visit_UnaryOp(self, node, uid=NONE):
+    def visit_UnaryOp(self, node, uid=None):
+        """Transform logical `not` operation or an unary operation *node* that
+        it is within a logical operation or a chained comparison."""
 
         self.generic_visit(node, uid)
+        if uid is None and node.op.__class__.__name__ == 'Not':
+            uid = self._uid
+
         if uid is None:
             return node
         else:
             print('~ UnaryOp')
             func = self['UnaryOp']
             args = [Str(node.op.__class__.__name__), node.operand, uid]
-            return copy(Call(func=func, args=args, keywords=[]), node)
+            return fix(copy(Call(func=func, args=args, keywords=[]), node))

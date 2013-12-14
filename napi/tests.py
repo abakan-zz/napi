@@ -1,12 +1,69 @@
+import ast
+
 from nose.tools import raises
 import numpy as np
 
 from napi import neval
 from napi.transformers import NapiTransformer, LazyTransformer
+from napi.expression import NewTransformer, NExpression
 from napi.transformers import short_circuit_and
 TRANSFORMERS = [NapiTransformer]#, LazyTransformer]
 
 randbools = lambda *n: np.random.randn(*n) < 0
+
+
+
+SHAPE = 100
+NS = {
+    'np': np,
+    '_E': NExpression(),
+    '_E_sc': NExpression(sc=1),
+    'b': randbools(SHAPE),
+    'o': np.ones(SHAPE),
+    'z': np.zeros(SHAPE),
+    'a': np.arange(SHAPE)
+}
+
+NOTRANS = ['- a', '~ a', '+ a',
+    'a - a * a / a', 'b < a',
+]
+
+def compare_code(trans, src):
+
+    code = compile(trans(ast.parse(src, '', 'eval')), '', 'eval')
+    assert code == compile(src, '', 'eval')
+
+def test_no_transformation():
+
+    t = NewTransformer()
+    for s in NOTRANS:
+        yield compare_code, t, s
+
+TESTS = [sub
+    ('not a', 'np.logical_not(a)'),
+    ('not not a', 'np.logical_not(np.logical_not(a))'),
+    #('a and not not a', 'a'),
+]
+
+def compare_results(trans, src, eqv):
+
+    result = eval(compile(trans(ast.parse(src, '', 'eval')), '', 'eval'), NS)
+    assert np.all(result == eval(eqv, NS))
+
+def test_transformer():
+
+    t = NewTransformer()
+    for s, e in TESTS:
+        yield compare_results, t, s, e
+
+def test_short_circuiting():
+
+    t = NewTransformer(e='_E_sc')
+    for s, e in TESTS:
+        yield compare_results, t, s, e
+
+
+"""
 
 
 def short_circuit_and_(arrays, shape):
@@ -181,7 +238,7 @@ def test_multidim_short_circuiting(debug=False):
 
 
 def test_comparison_chaining(debug=False):
-    """`a < b < c < d`"""
+    #`a < b < c < d`
 
     a = np.arange(10) - 4
     b, c, d = a * 2, a * 3, a * 4
@@ -240,3 +297,4 @@ def test_equal(debug=False):
 
 
 '''
+"""
